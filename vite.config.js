@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/surat-kuasa/', // <- ganti sesuai subpath
+  base: '/surat-kuasa/',
 })

@@ -1,7 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Download, User, Users, FileText, Info } from 'lucide-react';
-import LogoNuansaLegal from './assets/BKBlank_LogoNuansaLegal.png';
-import BannerFooter from './assets/Benner.jpeg';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Printer, User, Users, FileText, Info, Plus, Trash2 } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -25,20 +23,15 @@ function App() {
     alamat: ''
   }]);
 
-  const [perihalKuasa, setPerihalKuasa] = useState({
-    maksud: '',
-    detail: '',
-    nomorRekening: '',
-    namaBank: '',
-    jumlahUang: ''
-  });
+  // Ubah perihalKuasa jadi array of strings
+  const [maksudKuasaList, setMaksudKuasaList] = useState(['']);
 
   const [infoSurat, setInfoSurat] = useState({
     tempat: '',
     tanggal: new Date().toISOString().split('T')[0]
   });
 
-  // State untuk expand/collapse sections (start closed on load)
+  // State untuk expand/collapse sections
   const [expandedSections, setExpandedSections] = useState({
     pemberi: false,
     penerima: false,
@@ -46,14 +39,8 @@ function App() {
     info: false
   });
 
-  const previewRef = useRef(null);
-  const [pages, setPages] = useState(null); // array of dataURLs for each page
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isGeneratingPages, setIsGeneratingPages] = useState(false);
-
   const toggleSection = (section) => {
     setExpandedSections(prev => {
-      // Close all sections, then toggle the requested one
       const next = {
         pemberi: false,
         penerima: false,
@@ -78,6 +65,7 @@ function App() {
     return `${tempat}, ${formatTanggal(tanggal)}`;
   };
 
+  // Penerima Kuasa Functions
   const handleAddPenerima = () => {
     const newId = penerimaKuasaList.length + 1;
     setPenerimaKuasaList([...penerimaKuasaList, {
@@ -103,111 +91,115 @@ function App() {
     ));
   };
 
-  const handleDownloadPDF = async () => {
-    try {
-      // Ensure pages are generated
-      if (!pages || pages.length === 0) {
-        await generatePagesFromElement();
-      }
+  // Maksud Kuasa Functions
+  const handleAddMaksud = () => {
+    setMaksudKuasaList([...maksudKuasaList, '']);
+  };
 
-      const jsPDF = (await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm')).jsPDF;
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-      const imgWidthMm = 210;
-
-      for (let i = 0; i < pages.length; i++) {
-        const imgData = pages[i];
-        // create image to get natural width/height
-        // eslint-disable-next-line no-await-in-loop
-        await new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            const imgWidthPx = img.width;
-            const imgHeightPx = img.height;
-            const imgHeightMm = (imgHeightPx * imgWidthMm) / imgWidthPx;
-
-            pdf.addImage(img, 'PNG', 0, 0, imgWidthMm, imgHeightMm);
-            if (i < pages.length - 1) pdf.addPage();
-            resolve();
-          };
-          img.onerror = (e) => reject(e);
-          img.src = imgData;
-        });
-      }
-
-      pdf.save(`Surat_Kuasa_${pemberiKuasa.nama || 'Draft'}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Terjadi kesalahan saat membuat PDF. Pastikan semua data telah diisi.');
+  const handleRemoveMaksud = (index) => {
+    if (maksudKuasaList.length > 1) {
+      setMaksudKuasaList(maksudKuasaList.filter((_, i) => i !== index));
     }
   };
 
-  // Generate pages from the preview element and store images in `pages`
-  const generatePagesFromElement = async () => {
-    const element = previewRef.current;
-    if (!element) return;
-
-    try {
-      setIsGeneratingPages(true);
-      const html2canvas = (await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm')).default;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      const fullWidth = canvas.width;
-      // A4 ratio: 210 x 297 mm
-      const pageHeightPx = Math.floor((fullWidth * 297) / 210);
-      const totalHeight = canvas.height;
-      const totalPages = Math.ceil(totalHeight / pageHeightPx);
-
-      const imgs = [];
-      for (let p = 0; p < totalPages; p++) {
-        const sliceHeight = (p === totalPages - 1) ? (totalHeight - p * pageHeightPx) : pageHeightPx;
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = fullWidth;
-        pageCanvas.height = sliceHeight;
-        const ctx = pageCanvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(canvas, 0, -p * pageHeightPx);
-        imgs.push(pageCanvas.toDataURL('image/png'));
-      }
-
-      setPages(imgs);
-      setCurrentPage(0);
-    } catch (err) {
-      console.error('Error generating pages:', err);
-      setPages(null);
-    } finally {
-      setIsGeneratingPages(false);
-    }
+  const handleMaksudChange = (index, value) => {
+    setMaksudKuasaList(maksudKuasaList.map((m, i) => i === index ? value : m));
   };
 
-  // Regenerate pages when key data changes (debounced)
-  useEffect(() => {
-    // reset pages so UI shows live preview while generating
-    setPages(null);
-    setCurrentPage(0);
-    const t = setTimeout(() => {
-      generatePagesFromElement();
-    }, 700);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pemberiKuasa, penerimaKuasaList, perihalKuasa, infoSurat]);
+  // Print Function (ganti download PDF)
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Render TTD Grid (Pemberi Kuasa SELALU di kanan atas)
+  const renderTTDGrid = () => {
+    if (penerimaKuasaList.length === 1) {
+      // Jika hanya 1 penerima: side by side
+      return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }}>
+          {/* Penerima Kuasa */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: '4rem' }}>Penerima Kuasa</p>
+            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '7.1rem' }}>
+              <p style={{ fontWeight: '700' }}>{penerimaKuasaList[0].nama || '[Penerima Kuasa]'}</p>
+            </div>
+          </div>
+
+          {/* Pemberi Kuasa */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: '0.5rem' }}>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
+            <p style={{ marginBottom: '0.5rem' }}>Pemberi Kuasa</p>
+            <div style={{ display: 'inline-block', border: '1px solid #000', padding: '0.5rem 0.75rem', margin: '0.5rem 0' }}>
+              Materai 10.000
+            </div>
+            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '1.5rem' }}>
+              <p style={{ fontWeight: '700' }}>{pemberiKuasa.nama || '[Pemberi Kuasa]'}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Jika lebih dari 1 penerima:
+    // Baris 1: Penerima 1 (kiri) | Pemberi Kuasa (kanan)
+    // Baris 2+: Penerima 2, 3, 4, ... dalam grid 2 kolom
+    
+    return (
+      <div>
+        {/* Tanggal di atas kanan */}
+        <div style={{ marginLeft: '335px', marginBottom: '1rem' }}>
+          <p>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
+        </div>
+
+        {/* Baris Pertama: Penerima 1 & Pemberi Kuasa */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '2rem' }}>
+          {/* Penerima Kuasa 1 */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: '4rem' }}>Penerima Kuasa 1</p>
+            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '6.0rem' }}>
+              <p style={{ fontWeight: '700' }}>{penerimaKuasaList[0].nama || '[Penerima 1]'}</p>
+            </div>
+          </div>
+
+          {/* Pemberi Kuasa - SELALU DI SINI */}
+        
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: '0.5rem' }}>Pemberi Kuasa</p>
+            <div style={{ display: 'inline-block', border: '1px solid #000000ff', padding: '0.5rem 0.75rem', margin: '0.5rem 0' }}>
+              Materai 10.000
+            </div>
+            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '2rem' }}>
+              <p style={{ fontWeight: '700' }}>{pemberiKuasa.nama || '[Pemberi Kuasa]'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Penerima Kuasa 2, 3, 4, ... dalam grid 2 kolom */}
+        {penerimaKuasaList.length > 1 && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem 3rem' }}>
+            {penerimaKuasaList.slice(1).map((penerima, index) => (
+              <div key={penerima.id} style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                <p style={{ marginBottom: '4rem' }}>Penerima Kuasa {index + 2}</p>
+                <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '6.0rem' }}>
+                  <p style={{ fontWeight: '700' }}>{penerima.nama || `[Penerima ${index + 2}]`}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="app-wrapper">
       {/* Header */}
-      <header className="app-header">
+      <header className="app-header no-print">
         <div className="container">
           <div className="header-content">
             <div className="header-left">
               <div className="header-logo">
-                <img src={LogoNuansaLegal} alt="Nuansa Legal" style={{ width: '98px', height: '98px', objectFit: 'contain' }} />
+                <FileText size={40} />
               </div>
               <div className="header-text">
                 <h1>Generator Surat Kuasa</h1>
@@ -223,7 +215,7 @@ function App() {
         <div className="container">
           <div className="content-grid">
             {/* Left Column - Form */}
-            <div className="form-column">
+            <div className="form-column no-print">
               {/* Biodata Pemberi Kuasa */}
               <div className="form-section">
                 <button
@@ -327,33 +319,15 @@ function App() {
                 {expandedSections.penerima && (
                   <div className="section-body">
                     {penerimaKuasaList.map((penerima, index) => (
-                      <div key={penerima.id} style={{ 
-                        border: '1px solid #fde68a', 
-                        borderRadius: '0.5rem', 
-                        padding: '1rem', 
-                        marginBottom: '1rem',
-                        position: 'relative'
-                      }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          marginBottom: '0.5rem'
-                        }}>
+                      <div key={penerima.id} className="penerima-card">
+                        <div className="penerima-card-header">
                           <strong>Penerima #{index + 1}</strong>
                           {penerimaKuasaList.length > 1 && (
                             <button
                               onClick={() => handleRemovePenerima(penerima.id)}
-                              style={{
-                                background: '#ef4444',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.25rem',
-                                padding: '0.25rem 0.5rem',
-                                cursor: 'pointer',
-                                fontSize: '0.75rem'
-                              }}
+                              className="btn-remove"
                             >
+                              <Trash2 size={16} />
                               Hapus
                             </button>
                           )}
@@ -430,12 +404,15 @@ function App() {
                       </div>
                     ))}
 
-                    {/* Add button removed: only a single recipient is supported */}
+                    <button onClick={handleAddPenerima} className="btn-add">
+                      <Plus size={18} />
+                      <span>Tambah Penerima Kuasa</span>
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Perihal Kuasa */}
+              {/* Maksud/Tujuan Kuasa */}
               <div className="form-section">
                 <button
                   onClick={() => toggleSection('perihal')}
@@ -443,58 +420,41 @@ function App() {
                 >
                   <div className="section-header-left">
                     <FileText size={20} />
-                    <h2>Perihal Kuasa</h2>
+                    <h2>Maksud/Tujuan Kuasa</h2>
                   </div>
                   {expandedSections.perihal ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
                 
                 {expandedSections.perihal && (
                   <div className="section-body">
-                    <div className="form-group">
-                      <label className="form-label">Nomor Rekening Bank</label>
-                      <input
-                        type="text"
-                        value={perihalKuasa.nomorRekening}
-                        onChange={(e) => setPerihalKuasa({...perihalKuasa, nomorRekening: e.target.value})}
-                        className="form-input"
-                        placeholder="Contoh: 289374982347"
-                      />
-                    </div>
+                    {maksudKuasaList.map((maksud, index) => (
+                      <div key={index} className="maksud-item">
+                        <div className="maksud-item-header">
+                          <span className="maksud-number">{index + 1}.</span>
+                          <input
+                            type="text"
+                            value={maksud}
+                            onChange={(e) => handleMaksudChange(index, e.target.value)}
+                            className="form-input"
+                            placeholder="Masukkan maksud/tujuan kuasa"
+                            style={{ flex: 1 }}
+                          />
+                          {maksudKuasaList.length > 1 && (
+                            <button
+                              onClick={() => handleRemoveMaksud(index)}
+                              className="btn-remove-small"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
 
-                    <div className="form-group">
-                      <label className="form-label">Nama Bank</label>
-                      <input
-                        type="text"
-                        value={perihalKuasa.namaBank}
-                        onChange={(e) => setPerihalKuasa({...perihalKuasa, namaBank: e.target.value})}
-                        className="form-input"
-                        placeholder="Contoh: Bank BCA"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Maksud/Tujuan Kuasa</label>
-                      <textarea
-                        value={perihalKuasa.maksud}
-                        onChange={(e) => setPerihalKuasa({...perihalKuasa, maksud: e.target.value})}
-                        className="form-textarea"
-                        rows={3}
-                        placeholder="Contoh: Mengambil uang di bank"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Detail Tambahan</label>
-                      <textarea
-                        value={perihalKuasa.detail}
-                        onChange={(e) => setPerihalKuasa({...perihalKuasa, detail: e.target.value})}
-                        className="form-textarea"
-                        rows="3"
-                        placeholder="Keterangan tambahan jika diperlukan"
-                      />
-                    </div>
+                    <button onClick={handleAddMaksud} className="btn-add">
+                      <Plus size={18} />
+                      <span>Tambah Maksud/Tujuan</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -538,19 +498,16 @@ function App() {
                 )}
               </div>
 
-              {/* Download Button */}
-              <button
-                onClick={handleDownloadPDF}
-                className="btn-download"
-              >
-                <Download size={20} />
-                <span>Download PDF</span>
+              {/* Print Button */}
+              <button onClick={handlePrint} className="btn-download">
+                <Printer size={20} />
+                <span>Cetak / Simpan PDF</span>
               </button>
             </div>
 
             {/* Right Column - Preview */}
             <div className="preview-column">
-              <div className="preview-container">
+              <div className="preview-container no-print">
                 <div className="preview-header">
                   <h2>Preview Surat</h2>
                   <div className="preview-badge">
@@ -558,12 +515,8 @@ function App() {
                   </div>
                 </div>
 
-                {/* Preview Content */}
-                <div
-                  ref={previewRef}
-                  className="preview-content"
-                  style={{ display: pages ? 'none' : 'block' }}
-                >
+                {/* Preview Content (A4 size) */}
+                <div className="preview-content">
                   {/* Header Surat */}
                   <div className="surat-header">
                     <h1>SURAT KUASA</h1>
@@ -605,9 +558,14 @@ function App() {
                   </div>
 
                   {/* Penerima Kuasa */}
+                  <div className="surat-section">
+                    <p>Dengan ini memberikan kuasa kepada:</p>
+                    <p className="mt-3">Selanjutnya dalam surat kuasa ini disebut sebagai <strong>PENERIMA KUASA</strong>.</p>
+                  </div>
+
                   {penerimaKuasaList.map((penerima, index) => (
                     <div key={penerima.id} className="surat-section">
-                      <p>Dengan ini memberikan kuasa kepada{penerimaKuasaList.length > 1 ? `)` : ''}:</p>
+                      {penerimaKuasaList.length > 1 && <p className="font-bold">Penerima {index + 1}:</p>}
                       <table className="surat-table">
                         <tbody> 
                           <tr>
@@ -637,7 +595,6 @@ function App() {
                           </tr>
                         </tbody>
                       </table>
-                      <p className="mt-3">Selanjutnya dalam surat kuasa ini disebut sebagai <strong>PENERIMA KUASA{penerimaKuasaList.length > 1 ? ` ${index + 1}` : ''}</strong>.</p>
                     </div>
                   ))}
 
@@ -646,22 +603,14 @@ function App() {
                     <div className="surat-khusus">
                       <p>======================== KHUSUS ========================</p>
                     </div>
-                    <p className="text-justify">
-                      {perihalKuasa.nomorRekening && perihalKuasa.namaBank ? (
-                        <>
-                          Untuk mengambil uang di bank {perihalKuasa.namaBank} atas nama pemberi kuasa sebesar {perihalKuasa.jumlahUang || '[Jumlah]'}. 
-                          Termasuk menandatangani surat-surat yang berkaitan dengan pengambilannya.
-                        </>
-                      ) : (
-                        <>
-                          {perihalKuasa.maksud || '[Tujuan/maksud pemberian kuasa]'}
-                          {perihalKuasa.detail && `. ${perihalKuasa.detail}`}
-                        </>
-                      )}
+                    <p className="text-justify mb-3">
+                      Untuk keperluan:
                     </p>
-                    {perihalKuasa.nomorRekening && (
-                      <p className="mb-3">Nomor Rekening: <strong>{perihalKuasa.nomorRekening}</strong></p>
-                    )}
+                    <ol style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+                      {maksudKuasaList.filter(m => m.trim()).map((maksud, index) => (
+                        <li key={index} style={{ marginBottom: '0.3rem' }}>{maksud || '[Maksud/tujuan kuasa]'}</li>
+                      ))}
+                    </ol>
                     <p className="text-justify">
                       Demikian surat kuasa ini dibuat dengan sesungguhnya untuk dapat dipergunakan sebagaimana mestinya. 
                       Dan apabila di kemudian hari terdapat kesalahan dan/atau sejenis perselisihan maka segala akibat penyalahgunaan dari timbulnya surat kuasa ini akan sepenuhnya menjadi tanggung jawab pemberi kuasa.
@@ -670,130 +619,115 @@ function App() {
 
                   {/* Tanda Tangan */}
                   <div className="surat-signature">
-                    {penerimaKuasaList.length === 1 ? (
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
-                          {/* Left: Penerima Kuasa */}
-                          <div style={{ width: '48%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <p style={{ marginBottom: '3.5rem' }}>Penerima Kuasa</p>
-                            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', marginTop: '2rem' }}>
-                              <div style={{ width: '90%' }}>
-                                <div style={{ borderTop: '1px solid black', paddingTop: '0.25rem' }}>
-                                  <p className="signature-name" style={{ fontWeight: '700' }}>{penerimaKuasaList[0].nama || '[Penerima I]'}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right: Pemberi Kuasa (place/date, label, stamp, signature) */}
-                          <div style={{ width: '48%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <p style={{ alignSelf: 'flex-center', marginBottom: '0.5rem' }}>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
-                            <p style={{ marginBottom: '0.35rem' }}>Pemberi Kuasa</p>
-
-                            {/* Stamp box placed under Pemberi label so it shows above signature line */}
-                            <div style={{ display: 'inline-block', border: '1px solid #000', padding: '0.5rem 0.6rem', margin: '0.5rem 0' }}>Materai 10.000</div>
-
-                            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
-                              <div style={{ width: '90%' }}>
-                                <div style={{ borderTop: '1px solid black', paddingTop: '0.25rem' }}>
-                                  <p className="signature-name" style={{ fontWeight: '700' }}>{pemberiKuasa.nama || '[Pemberi]'}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      /* existing multi-recipient layout (leave unchanged) */
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
-                          <div style={{ width: '58%', textAlign: 'center' }}>
-                            <p style={{ marginBottom: '6.7rem' }}>Penerima Kuasa I</p>
-                            <div style={{ borderTop: '1px solid black', paddingTop: '0.25rem', marginTop: '2rem' }}>
-                              <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>{penerimaKuasaList[0]?.nama || '[Penerima I]'}</p>
-                            </div>
-                          </div>
-
-                          <div style={{ width: '40%', textAlign: 'center' }}>
-                            <p style={{ alignSelf: 'flex-center', marginBottom: '0.5rem' }}>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
-                            <p style={{ marginBottom: '3.5rem'}}>Pemberi Kuasa</p>
-                            <div style={{ display: 'inline-block', border: '1px solid #000', padding: '0.5rem 0.6rem', margin: '0.5rem 0' }}>Materai 10.000</div>
-                            <div style={{ borderTop: '1px solid black', paddingTop: '0.25rem' }}>
-                              <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>{pemberiKuasa.nama || '[Pemberi]'}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Remaining recipients listed vertically with signature placeholders */}
-                        <div>
-                          {penerimaKuasaList.slice(1).map((p, idx) => (
-                            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0' }}>
-                              <div style={{ textAlign: 'left' }}>
-                                <p style={{ margin: 0 }}>{p.nama || `{ Penerima Kuasa ${idx + 2} }`}</p>
-                              </div>
-                              <div style={{ width: '40%', textAlign: 'center' }}>
-                                <div style={{ borderTop: '1px solid black', paddingTop: '0.25rem', width: '70%', margin: '0 auto' }}>
-                                  <p style={{ margin: 0, fontWeight: '700' }}>{p.nama ? '' : ''}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {renderTTDGrid()}
                   </div>
                 </div>
+              </div>
 
-                {/* Paginated preview images (shown when pages are generated) */}
-                {pages && pages.length > 0 && (
-                  <div className="paginated-preview" style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <div>
-                        <strong>Preview Pages</strong>
-                        <span style={{ marginLeft: '0.5rem', color: '#6b7280' }}>{isGeneratingPages ? ' (Membuat halaman...)' : ` (${pages.length} halaman)`}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <button
-                          onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                          disabled={currentPage === 0}
-                          style={{ padding: '0.45rem 0.9rem', cursor: 'pointer', marginRight: '0.25rem', borderRadius: '6px' }}
-                        >
-                          Prev
-                        </button>
-                        <button
-                          onClick={() => setCurrentPage(p => Math.min(pages.length - 1, p + 1))}
-                          disabled={currentPage === pages.length - 1}
-                          style={{ padding: '0.45rem 0.9rem', cursor: 'pointer', marginLeft: '0.25rem', borderRadius: '6px' }}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-
-                    <div style={{ border: '1px solid #e5e7eb', padding: '0.75rem', borderRadius: '0.25rem', background: 'white' }}>
-                      <img src={pages[currentPage]} alt={`Page ${currentPage + 1}`} style={{ width: '100%', display: 'block' }} />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-                      {pages.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentPage(idx)}
-                          style={{
-                            padding: '0.45rem 0.85rem',
-                            cursor: 'pointer',
-                            borderRadius: '6px',
-                            border: idx === currentPage ? '2px solid #059669' : '1px solid #d1d5db',
-                            background: idx === currentPage ? '#ecfdf5' : 'white',
-                            margin: '0.25rem'
-                          }}
-                        >
-                          {idx + 1}
-                        </button>
-                      ))}
-                    </div>
+              {/* Print Preview (hidden, only for print) */}
+              <div className="print-only">
+                <div className="preview-content">
+                  {/* Same content as above */}
+                  <div className="surat-header">
+                    <h1>SURAT KUASA</h1>
                   </div>
-                )}
+
+                  <div className="surat-section">
+                    <p>Yang bertanda tangan di bawah ini:</p>
+                    <table className="surat-table">
+                      <tbody>
+                        <tr>
+                          <td>Nama</td>
+                          <td>:</td>
+                          <td className="font-bold">{pemberiKuasa.nama || '[Nama Pemberi Kuasa]'}</td>
+                        </tr>
+                        <tr>
+                          <td>Tempat/Tgl. Lahir</td>
+                          <td>:</td>
+                          <td>{formatTTL(pemberiKuasa.tempatLahir, pemberiKuasa.tanggalLahir) || '[Tempat, Tanggal Lahir]'}</td>
+                        </tr>
+                        <tr>
+                          <td>Nomor KTP</td>
+                          <td>:</td>
+                          <td>{pemberiKuasa.nik || '[Nomor KTP]'}</td>
+                        </tr>
+                        <tr>
+                          <td>Jenis Kelamin</td>
+                          <td>:</td>
+                          <td>{pemberiKuasa.jenisKelamin}</td>
+                        </tr>
+                        <tr>
+                          <td>Alamat</td>
+                          <td>:</td>
+                          <td>{pemberiKuasa.alamat || '[Alamat Lengkap]'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p className="mt-3">Selanjutnya dalam surat kuasa ini disebut sebagai <strong>PEMBERI KUASA</strong>.</p>
+                  </div>
+
+                  <div className="surat-section">
+                    <p>Dengan ini memberikan kuasa kepada:</p>
+                    <p className="mt-3">Selanjutnya dalam surat kuasa ini disebut sebagai <strong>PENERIMA KUASA</strong>.</p>
+                  </div>
+
+                  {penerimaKuasaList.map((penerima, index) => (
+                    <div key={penerima.id} className="surat-section">
+                      {penerimaKuasaList.length > 1 && <p className="font-bold">Penerima {index + 1}:</p>}
+                      <table className="surat-table">
+                        <tbody> 
+                          <tr>
+                            <td>Nama</td>
+                            <td>:</td>
+                            <td className="font-bold">{penerima.nama || '[Nama Penerima Kuasa]'}</td>
+                          </tr>
+                          <tr>
+                            <td>Tempat/Tgl. Lahir</td>
+                            <td>:</td>
+                            <td>{formatTTL(penerima.tempatLahir, penerima.tanggalLahir) || '[Tempat, Tanggal Lahir]'}</td>
+                          </tr>
+                          <tr>
+                            <td>Nomor KTP</td>
+                            <td>:</td>
+                            <td>{penerima.nik || '[Nomor KTP]'}</td>
+                          </tr>
+                          <tr>
+                            <td>Jenis Kelamin</td>
+                            <td>:</td>
+                            <td>{penerima.jenisKelamin}</td>
+                          </tr>
+                          <tr>
+                            <td>Alamat</td>
+                            <td>:</td>
+                            <td>{penerima.alamat || '[Alamat Lengkap]'}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+
+                  <div className="surat-section">
+                    <div className="surat-khusus">
+                      <p>======================== KHUSUS ========================</p>
+                    </div>
+                    <p className="text-justify mb-3">
+                      Untuk keperluan:
+                    </p>
+                    <ol style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+                      {maksudKuasaList.filter(m => m.trim()).map((maksud, index) => (
+                        <li key={index} style={{ marginBottom: '0.3rem' }}>{maksud || '[Maksud/tujuan kuasa]'}</li>
+                      ))}
+                    </ol>
+                    <p className="text-justify">
+                      Demikian surat kuasa ini dibuat dengan sesungguhnya untuk dapat dipergunakan sebagaimana mestinya. 
+                      Dan apabila di kemudian hari terdapat kesalahan dan/atau sejenis perselisihan maka segala akibat penyalahgunaan dari timbulnya surat kuasa ini akan sepenuhnya menjadi tanggung jawab pemberi kuasa.
+                    </p>
+                  </div>
+
+                  <div className="surat-signature">
+                    {renderTTDGrid()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -801,11 +735,11 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="app-footer">
+      <footer className="app-footer no-print">
         <div className="container">
           <div className="footer-content">
             <p>Generator Surat Kuasa - Generated Automatically</p>
-            <p className="footer-note">@ 2025 nuansalegal.id. All rights reserved.</p>
+            <p className="footer-note">© 2025 nuansalegal.id. All rights reserved.</p>
           </div>
         </div>
       </footer>
