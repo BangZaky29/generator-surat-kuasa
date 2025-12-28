@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Printer, User, Users, FileText, Info, Plus, Trash2 } from 'lucide-react';
+import logo from './assets/NS_white_01.png';
 import './App.css';
 
 function App() {
@@ -23,7 +24,6 @@ function App() {
     alamat: ''
   }]);
 
-  // Ubah perihalKuasa jadi array of strings
   const [maksudKuasaList, setMaksudKuasaList] = useState(['']);
 
   const [infoSurat, setInfoSurat] = useState({
@@ -106,82 +106,158 @@ function App() {
     setMaksudKuasaList(maksudKuasaList.map((m, i) => i === index ? value : m));
   };
 
-  // Print Function (ganti download PDF)
+  // Print Function
   const handlePrint = () => {
     window.print();
   };
 
-  // Render TTD Grid (Pemberi Kuasa SELALU di kanan atas)
+  // Render TTD Grid - Mobile Responsive
   const renderTTDGrid = () => {
+    const isMobile = window.innerWidth <= 640;
+    
     if (penerimaKuasaList.length === 1) {
-      // Jika hanya 1 penerima: side by side
+      // Jika hanya 1 penerima
       return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+          gap: '2rem', 
+          marginTop: '2rem',
+          width: '100%',
+          maxWidth: '100%'
+        }}>
           {/* Penerima Kuasa */}
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', width: '100%' }}>
             <p style={{ marginBottom: '4rem' }}>Penerima Kuasa</p>
-            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '7.1rem' }}>
-              <p style={{ fontWeight: '700' }}>{penerimaKuasaList[0].nama || '[Penerima Kuasa]'}</p>
+            <div style={{ 
+              borderTop: '1.5px solid black', 
+              paddingTop: '0.5rem', 
+              marginTop: '7.1rem',
+              width: '100%'
+            }}>
+              <p style={{ fontWeight: '700', wordWrap: 'break-word' }}>
+                {penerimaKuasaList[0].nama || '[Penerima Kuasa]'}
+              </p>
             </div>
           </div>
 
           {/* Pemberi Kuasa */}
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ marginBottom: '0.5rem' }}>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
+          <div style={{ textAlign: 'center', width: '100%' }}>
+            <p style={{ marginBottom: '0.5rem', wordWrap: 'break-word' }}>
+              {infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}
+            </p>
             <p style={{ marginBottom: '0.5rem' }}>Pemberi Kuasa</p>
-            <div style={{ display: 'inline-block', border: '1px solid #000', padding: '0.5rem 0.75rem', margin: '0.5rem 0' }}>
+            <div style={{ 
+              display: 'inline-block', 
+              border: '1px solid #000', 
+              padding: '0.5rem 0.75rem', 
+              margin: '0.5rem 0',
+              maxWidth: '100%'
+            }}>
               Materai 10.000
             </div>
-            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '1.5rem' }}>
-              <p style={{ fontWeight: '700' }}>{pemberiKuasa.nama || '[Pemberi Kuasa]'}</p>
+            <div style={{ 
+              borderTop: '1.5px solid black', 
+              paddingTop: '0.5rem', 
+              marginTop: '1.5rem',
+              width: '100%'
+            }}>
+              <p style={{ fontWeight: '700', wordWrap: 'break-word' }}>
+                {pemberiKuasa.nama || '[Pemberi Kuasa]'}
+              </p>
             </div>
           </div>
         </div>
       );
     }
 
-    // Jika lebih dari 1 penerima:
-    // Baris 1: Penerima 1 (kiri) | Pemberi Kuasa (kanan)
-    // Baris 2+: Penerima 2, 3, 4, ... dalam grid 2 kolom
-    
+    // Jika lebih dari 1 penerima
     return (
-      <div>
-        {/* Tanggal di atas kanan */}
-        <div style={{ marginLeft: '335px', marginBottom: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: '100%' }}>
+        {/* Tanggal di atas kanan (mobile: center) */}
+        <div style={{ 
+          marginLeft: isMobile ? '0' : '335px', 
+          marginBottom: '1rem',
+          textAlign: isMobile ? 'center' : 'left',
+          wordWrap: 'break-word'
+        }}>
           <p>{infoSurat.tempat || '[Tempat]'}, {formatTanggal(infoSurat.tanggal)}</p>
         </div>
 
         {/* Baris Pertama: Penerima 1 & Pemberi Kuasa */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginBottom: '2rem' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+          gap: isMobile ? '1.5rem' : '3rem', 
+          marginBottom: '2rem',
+          width: '100%',
+          maxWidth: '100%'
+        }}>
           {/* Penerima Kuasa 1 */}
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', width: '100%' }}>
             <p style={{ marginBottom: '4rem' }}>Penerima Kuasa 1</p>
-            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '6.0rem' }}>
-              <p style={{ fontWeight: '700' }}>{penerimaKuasaList[0].nama || '[Penerima 1]'}</p>
+            <div style={{ 
+              borderTop: '1.5px solid black', 
+              paddingTop: '0.5rem', 
+              marginTop: '6.0rem',
+              width: '100%'
+            }}>
+              <p style={{ fontWeight: '700', wordWrap: 'break-word' }}>
+                {penerimaKuasaList[0].nama || '[Penerima 1]'}
+              </p>
             </div>
           </div>
 
-          {/* Pemberi Kuasa - SELALU DI SINI */}
-        
-          <div style={{ textAlign: 'center' }}>
+          {/* Pemberi Kuasa */}
+          <div style={{ textAlign: 'center', width: '100%' }}>
             <p style={{ marginBottom: '0.5rem' }}>Pemberi Kuasa</p>
-            <div style={{ display: 'inline-block', border: '1px solid #000000ff', padding: '0.5rem 0.75rem', margin: '0.5rem 0' }}>
+            <div style={{ 
+              display: 'inline-block', 
+              border: '1px solid #000000ff', 
+              padding: '0.5rem 0.75rem', 
+              margin: '0.5rem 0',
+              maxWidth: '100%'
+            }}>
               Materai 10.000
             </div>
-            <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '2rem' }}>
-              <p style={{ fontWeight: '700' }}>{pemberiKuasa.nama || '[Pemberi Kuasa]'}</p>
+            <div style={{ 
+              borderTop: '1.5px solid black', 
+              paddingTop: '0.5rem', 
+              marginTop: '2rem',
+              width: '100%'
+            }}>
+              <p style={{ fontWeight: '700', wordWrap: 'break-word' }}>
+                {pemberiKuasa.nama || '[Pemberi Kuasa]'}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Penerima Kuasa 2, 3, 4, ... dalam grid 2 kolom */}
+        {/* Penerima Kuasa 2+ dalam grid */}
         {penerimaKuasaList.length > 1 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem 3rem' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+            gap: isMobile ? '1.5rem' : '2rem 3rem',
+            width: '100%',
+            maxWidth: '100%'
+          }}>
             {penerimaKuasaList.slice(1).map((penerima, index) => (
-              <div key={penerima.id} style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <div key={penerima.id} style={{ 
+                textAlign: 'center', 
+                marginBottom: '1rem',
+                width: '100%'
+              }}>
                 <p style={{ marginBottom: '4rem' }}>Penerima Kuasa {index + 2}</p>
-                <div style={{ borderTop: '1.5px solid black', paddingTop: '0.5rem', marginTop: '6.0rem' }}>
-                  <p style={{ fontWeight: '700' }}>{penerima.nama || `[Penerima ${index + 2}]`}</p>
+                <div style={{ 
+                  borderTop: '1.5px solid black', 
+                  paddingTop: '0.5rem', 
+                  marginTop: '6.0rem',
+                  width: '100%'
+                }}>
+                  <p style={{ fontWeight: '700', wordWrap: 'break-word' }}>
+                    {penerima.nama || `[Penerima ${index + 2}]`}
+                  </p>
                 </div>
               </div>
             ))}
@@ -199,7 +275,10 @@ function App() {
           <div className="header-content">
             <div className="header-left">
               <div className="header-logo">
-                <FileText size={40} />
+                <img 
+                  src={logo} 
+                  alt="Nuansa Legal Logo" 
+                />
               </div>
               <div className="header-text">
                 <h1>Generator Surat Kuasa</h1>
@@ -627,7 +706,6 @@ function App() {
               {/* Print Preview (hidden, only for print) */}
               <div className="print-only">
                 <div className="preview-content">
-                  {/* Same content as above */}
                   <div className="surat-header">
                     <h1>SURAT KUASA</h1>
                   </div>
@@ -739,7 +817,7 @@ function App() {
         <div className="container">
           <div className="footer-content">
             <p>Generator Surat Kuasa - Generated Automatically</p>
-            <p className="footer-note">© 2025 nuansalegal.id. All rights reserved.</p>
+            <p className="footer-note">© 2022 Nuansa Solution | All rights reserved.</p>
           </div>
         </div>
       </footer>
