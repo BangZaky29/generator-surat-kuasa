@@ -2,8 +2,14 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Printer, User, Users, FileText, Info, Plus, Trash2 } from 'lucide-react';
 import logo from './assets/NS_white_01.png';
 import './App.css';
+import { generatePDF } from './utils/downloadPDF';
+
 
 function App() {
+  const handleDownloadPDF = () => {
+    generatePDF(pemberiKuasa, penerimaKuasaList, maksudKuasaList, infoSurat);
+  };
+
   // State untuk form data
   const [pemberiKuasa, setPemberiKuasa] = useState({
     nama: '',
@@ -578,10 +584,18 @@ function App() {
               </div>
 
               {/* Print Button */}
-              <button onClick={handlePrint} className="btn-download">
-                <Printer size={20} />
-                <span>Cetak / Simpan PDF</span>
-              </button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={handlePrint} className="btn-download">
+                  <Printer size={20} />
+                  <span>Print Preview</span>
+                </button>
+
+                <button onClick={handleDownloadPDF} className="btn-download">
+                  <Printer size={20} />
+                  <span>Download PDF</span>
+                </button>
+            </div>
+
             </div>
 
             {/* Right Column - Preview */}
