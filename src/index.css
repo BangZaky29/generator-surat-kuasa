@@ -94,12 +94,19 @@
 
 /* Responsive Preview Wrapper */
 .preview-wrapper {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* Pattern background for the preview area */
   background-color: #f1f5f9;
   background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+.pdf-export,
+.pdf-export * {
+  overflow: visible !important;
+  transform: none !important;
 }
 
 /* Mobile Preview Scale - Scales the A4 paper down on small screens */
@@ -175,8 +182,10 @@
   #surat-preview {
     box-shadow: none !important;
     margin: 0 !important;
-    width: 100% !important; /* Let it fill the paper width */
-    max-width: none !important;
+    width: 794px;
+    min-height: 1123px;
+    background: white;
+    overflow: visible;
     padding: 2.5cm !important; /* Ensure padding is kept */
     page-break-after: always;
     page-break-inside: avoid;
@@ -190,4 +199,9 @@
     display: block !important;
     padding: 0 !important;
   }
+}
+
+.break-inside-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }

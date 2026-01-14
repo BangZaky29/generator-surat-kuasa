@@ -192,61 +192,134 @@ const PreviewPanel = ({ data, signatures }) => {
               Demikian Surat Kuasa ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
             </p>
 
-            {/* SIGNATURE SECTION */}
+            {/* ================= SIGNATURE SECTION ================= */}
             <div className="mt-12 break-inside-avoid">
-              <div className="text-right mb-8">
+
+              {/* TANGGAL & KOTA */}
+              <div className="text-end mb-1 mr-10">
                 <p>
                   {data.info.kota || "Jakarta"}, {formatDate(data.info.tanggal)}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
-                {/* PENERIMA SIGNATURES */}
-                <div className="flex flex-col gap-12">
-                  {data.penerimaList.map((penerima, idx) => (
-                    <div key={penerima.id} className="text-center break-inside-avoid">
-                      <p className="mb-2">Penerima Kuasa {data.penerimaList.length > 1 ? idx + 1 : ''}</p>
-                      <div className="h-24 flex items-center justify-center">
-                        {signatures[`penerima_${penerima.id}`] ? (
-                          <img 
-                            src={signatures[`penerima_${penerima.id}`]} 
-                            alt="TTD Penerima" 
-                            className="max-h-24 mix-blend-multiply" 
-                          />
-                        ) : (
-                          <div className="h-24 w-full"></div>
-                        )}
-                      </div>
-                      <p className="font-bold underline mt-2 uppercase">{penerima.nama || "( Nama Lengkap )"}</p>
-                    </div>
-                  ))}
+              {/* GRID SIGNATURE */}
+              <div className="grid grid-cols-2 gap-x-12 gap-y-14">
+
+                {/* ===== ROW 1 : PENERIMA 1 | PEMBERI ===== */}
+                <div className="text-center break-inside-avoid">
+                  <p className="mb-2">
+                    Penerima Kuasa {data.penerimaList.length > 1 ? "1" : ""}
+                  </p>
+
+                  <div className="h-24 flex items-center justify-center">
+                    {data.penerimaList[0] &&
+                    signatures[`penerima_${data.penerimaList[0].id}`] ? (
+                      <img
+                        src={signatures[`penerima_${data.penerimaList[0].id}`]}
+                        alt="TTD Penerima"
+                        className="max-h-24 mix-blend-multiply"
+                      />
+                    ) : (
+                      <div className="h-24 w-full" />
+                    )}
+                  </div>
+
+                  <p className="font-bold underline mt-2 uppercase">
+                    {data.penerimaList[0]?.nama || "( Nama Lengkap )"}
+                  </p>
                 </div>
 
-                {/* PEMBERI SIGNATURE */}
+                {/* PEMBERI */}
                 <div className="text-center break-inside-avoid">
                   <p className="mb-2">Pemberi Kuasa</p>
+
                   <div className="relative h-24 flex items-center justify-center">
-                    {/* MATERAI PLACEHOLDER */}
+                    {/* MATERAI */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
                       <div className="border border-black w-16 h-8 text-[8px] flex items-center justify-center">
                         MATERAI
                       </div>
                     </div>
-                    
+
                     {signatures.pemberi ? (
-                      <img 
-                        src={signatures.pemberi} 
-                        alt="TTD Pemberi" 
-                        className="max-h-24 mix-blend-multiply relative z-10" 
+                      <img
+                        src={signatures.pemberi}
+                        alt="TTD Pemberi"
+                        className="max-h-24 mix-blend-multiply relative z-10"
                       />
                     ) : (
-                       <div className="h-24 w-full"></div>
+                      <div className="h-24 w-full" />
                     )}
                   </div>
-                  <p className="font-bold underline mt-2 uppercase">{data.pemberi.nama || "( Nama Lengkap )"}</p>
+
+                  <p className="font-bold underline mt-2 uppercase">
+                    {data.pemberi.nama || "( Nama Lengkap )"}
+                  </p>
                 </div>
+
+                {/* ===== ROW BERIKUTNYA : PENERIMA BERPASANGAN ===== */}
+                {data.penerimaList.slice(1).reduce((rows, penerima, index, arr) => {
+                  if (index % 2 === 0) {
+                    rows.push(arr.slice(index, index + 2))
+                  }
+                  return rows
+                }, []).map((pair, rowIdx) => (
+                  <React.Fragment key={rowIdx}>
+
+                    {/* KIRI */}
+                    <div className="text-center break-inside-avoid">
+                      <p className="mb-2">Penerima Kuasa {rowIdx * 2 + 2}</p>
+
+                      <div className="h-24 flex items-center justify-center">
+                        {pair[0] && signatures[`penerima_${pair[0].id}`] ? (
+                          <img
+                            src={signatures[`penerima_${pair[0].id}`]}
+                            alt="TTD Penerima"
+                            className="max-h-24 mix-blend-multiply"
+                          />
+                        ) : (
+                          <div className="h-24 w-full" />
+                        )}
+                      </div>
+
+                      <p className="font-bold underline mt-2 uppercase">
+                        {pair[0]?.nama || "( Nama Lengkap )"}
+                      </p>
+                    </div>
+
+                    {/* KANAN */}
+                    <div className="text-center break-inside-avoid">
+                      {pair[1] ? (
+                        <>
+                          <p className="mb-2">Penerima Kuasa {rowIdx * 2 + 3}</p>
+
+                          <div className="h-24 flex items-center justify-center">
+                            {signatures[`penerima_${pair[1].id}`] ? (
+                              <img
+                                src={signatures[`penerima_${pair[1].id}`]}
+                                alt="TTD Penerima"
+                                className="max-h-24 mix-blend-multiply"
+                              />
+                            ) : (
+                              <div className="h-24 w-full" />
+                            )}
+                          </div>
+
+                          <p className="font-bold underline mt-2 uppercase">
+                            {pair[1]?.nama || "( Nama Lengkap )"}
+                          </p>
+                        </>
+                      ) : (
+                        <div />
+                      )}
+                    </div>
+
+                  </React.Fragment>
+                ))}
               </div>
             </div>
+
+
 
           </div>
         </div>
