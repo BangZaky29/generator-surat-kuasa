@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Download, Printer, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { downloadPDF } from "../utils/downloadPDF";
 
-const PreviewPanel = ({ data, signatures }) => {
+const PreviewPanel = ({ data, signatures, onSave }) => {
   const [downloadStatus, setDownloadStatus] = useState('idle'); // 'idle', 'loading', 'success', 'error'
 
   const formatDate = (dateString) => {
@@ -16,16 +17,16 @@ const PreviewPanel = ({ data, signatures }) => {
 
     try {
       setDownloadStatus('loading');
-      
+
       // Add a small delay to allow UI to render 'loading' state before heavy canvas operation
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       await downloadPDF("surat-preview", `Surat-Kuasa-${data.pemberi.nama || 'Draft'}.pdf`);
-      
+
       setDownloadStatus('success');
       // Reset status after 3 seconds
       setTimeout(() => setDownloadStatus('idle'), 3000);
-      
+
     } catch (error) {
       console.error("PDF Download Error:", error);
       setDownloadStatus('error');
@@ -39,19 +40,18 @@ const PreviewPanel = ({ data, signatures }) => {
 
   return (
     <div className="preview-container h-full flex flex-col bg-slate-100 md:rounded-2xl rounded-none overflow-hidden shadow-none md:shadow-inner border-y border-slate-200 md:border-x relative">
-      
+
       {/* Toast Notification */}
       {downloadStatus !== 'idle' && (
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none">
-          <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-xl border backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 ${
-            downloadStatus === 'loading' ? 'bg-indigo-900/90 text-white border-indigo-700' :
-            downloadStatus === 'success' ? 'bg-emerald-600/90 text-white border-emerald-500' :
-            'bg-red-600/90 text-white border-red-500'
-          }`}>
+          <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-xl border backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 ${downloadStatus === 'loading' ? 'bg-indigo-900/90 text-white border-indigo-700' :
+              downloadStatus === 'success' ? 'bg-emerald-600/90 text-white border-emerald-500' :
+                'bg-red-600/90 text-white border-red-500'
+            }`}>
             {downloadStatus === 'loading' && <Loader2 className="w-5 h-5 animate-spin" />}
             {downloadStatus === 'success' && <CheckCircle2 className="w-5 h-5" />}
             {downloadStatus === 'error' && <AlertCircle className="w-5 h-5" />}
-            
+
             <span className="font-medium text-sm">
               {downloadStatus === 'loading' && 'Sedang memproses PDF...'}
               {downloadStatus === 'success' && 'Berhasil didownload!'}
@@ -68,7 +68,15 @@ const PreviewPanel = ({ data, signatures }) => {
           Preview
         </h3>
         <div className="flex gap-2">
-          <button 
+          <button
+            onClick={onSave}
+            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs md:text-sm font-bold rounded-xl transition-all active:scale-95"
+            title="Simpan Data"
+          >
+            <Download size={16} className="rotate-180" />
+            <span className="hidden sm:inline">Simpan</span>
+          </button>
+          <button
             onClick={handlePrint}
             disabled={downloadStatus === 'loading'}
             className="btn-secondary px-3 py-1.5 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -77,12 +85,11 @@ const PreviewPanel = ({ data, signatures }) => {
             <Printer size={16} />
             <span className="hidden sm:inline">Print</span>
           </button>
-          <button 
+          <button
             onClick={handleDownload}
             disabled={downloadStatus === 'loading'}
-            className={`btn-primary px-3 py-1.5 text-xs md:text-sm disabled:opacity-70 disabled:cursor-not-allowed ${
-               downloadStatus === 'success' ? '!bg-emerald-600' : ''
-            }`}
+            className={`btn-primary px-3 py-1.5 text-xs md:text-sm disabled:opacity-70 disabled:cursor-not-allowed ${downloadStatus === 'success' ? '!bg-emerald-600' : ''
+              }`}
             title="Download PDF"
           >
             {downloadStatus === 'loading' ? (
@@ -100,11 +107,11 @@ const PreviewPanel = ({ data, signatures }) => {
       </div>
 
       {/* Scrollable Area - Updated for better mobile centering */}
-      <div className="preview-wrapper flex-1 relative flex flex-col items-center p-0 md:p-8 bg-slate-100/50 overflow-x-hidden">
-        
+      <div className="preview-wrapper flex-1 relative flex flex-col items-center p-0 md:p-8 bg-slate-100/50 overflow-x-hidden border-box">
+
         {/* A4 PAPER - Scaled on Mobile via CSS */}
-        <div 
-          id="surat-preview" 
+        <div
+          id="surat-preview"
           className="bg-white w-[210mm] min-h-[297mm] paper-shadow p-[2.5cm] text-black box-border relative shrink-0 transition-transform origin-top"
         >
           {/* TITLE */}
@@ -213,7 +220,7 @@ const PreviewPanel = ({ data, signatures }) => {
 
                   <div className="h-24 flex items-center justify-center">
                     {data.penerimaList[0] &&
-                    signatures[`penerima_${data.penerimaList[0].id}`] ? (
+                      signatures[`penerima_${data.penerimaList[0].id}`] ? (
                       <img
                         src={signatures[`penerima_${data.penerimaList[0].id}`]}
                         alt="TTD Penerima"
@@ -318,9 +325,6 @@ const PreviewPanel = ({ data, signatures }) => {
                 ))}
               </div>
             </div>
-
-
-
           </div>
         </div>
       </div>

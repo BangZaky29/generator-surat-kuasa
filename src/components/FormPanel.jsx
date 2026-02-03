@@ -29,16 +29,20 @@ const TextArea = ({ label, value, onChange, placeholder }) => (
   </div>
 );
 
-const FormPanel = ({ 
-  data, 
-  setData, 
-  signatures, 
-  setSignatures, 
-  addPenerima, 
-  removePenerima, 
-  updatePenerima 
+const FormPanel = ({
+  data,
+  setData,
+  signatures,
+  setSignatures,
+  addPenerima,
+  removePenerima,
+  updatePenerima,
+  history,
+  onImport,
+  onDeleteHistory
 }) => {
-  
+  const [showHistory, setShowHistory] = React.useState(false);
+
   const handlePemberiChange = (field, value) => {
     setData(prev => ({ ...prev, pemberi: { ...prev.pemberi, [field]: value } }));
   };
@@ -49,36 +53,95 @@ const FormPanel = ({
 
   return (
     <div className="form-panel h-full overflow-y-auto p-4 md:pr-1 md:pl-0 pb-24 md:pb-0 scroll-smooth custom-scrollbar">
-      
+
+      {/* SECTION 0: HISTORY SELECTION */}
+      <div className="mb-6 relative">
+        <div
+          onClick={() => setShowHistory(!showHistory)}
+          className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-100 transition-colors">
+              <Info size={18} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">Riwayat Data</h3>
+              <p className="text-[10px] text-slate-500 font-medium">Gunakan data yang pernah disimpan sebelumnya</p>
+            </div>
+          </div>
+          <Plus className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${showHistory ? 'rotate-45 text-slate-600' : ''}`} />
+        </div>
+
+        {showHistory && (
+          <div className="absolute top-full left-0 right-0 z-[60] mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="max-h-60 overflow-y-auto custom-scrollbar">
+              {history.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-xs text-slate-400 font-medium italic">Belum ada riwayat data tersimpan</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {history.map((item) => (
+                    <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 group/item">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-700 truncate">{item.label}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{new Date(item.timestamp).toLocaleString('id-ID')}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => {
+                            onImport(item.data);
+                            setShowHistory(false);
+                          }}
+                          className="px-3 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          Import
+                        </button>
+                        <button
+                          onClick={() => onDeleteHistory(item.id)}
+                          className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                          title="Hapus dari riwayat"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
       {/* SECTION 1: PEMBERI KUASA */}
       <AccordionSection title="Biodata Pemberi Kuasa" icon={User} isOpen={true}>
-        <InputField 
-          label="Nama Lengkap" 
-          value={data.pemberi.nama} 
+        <InputField
+          label="Nama Lengkap"
+          value={data.pemberi.nama}
           onChange={(e) => handlePemberiChange('nama', e.target.value)}
           placeholder="Contoh: Budi Santoso"
         />
-        <InputField 
-          label="NIK / No. KTP" 
-          value={data.pemberi.nik} 
+        <InputField
+          label="NIK / No. KTP"
+          value={data.pemberi.nik}
           onChange={(e) => handlePemberiChange('nik', e.target.value)}
           placeholder="16 digit NIK"
         />
-        <InputField 
-          label="Pekerjaan" 
-          value={data.pemberi.pekerjaan} 
+        <InputField
+          label="Pekerjaan"
+          value={data.pemberi.pekerjaan}
           onChange={(e) => handlePemberiChange('pekerjaan', e.target.value)}
           placeholder="Wiraswasta"
         />
-        <TextArea 
-          label="Alamat Lengkap" 
-          value={data.pemberi.alamat} 
+        <TextArea
+          label="Alamat Lengkap"
+          value={data.pemberi.alamat}
           onChange={(e) => handlePemberiChange('alamat', e.target.value)}
           placeholder="Jl. Merdeka No. 1, Jakarta"
         />
         <div className="mt-6 pt-4 border-t border-slate-100">
-          <SignaturePad 
-            label="Tanda Tangan Pemberi Kuasa" 
+          <SignaturePad
+            label="Tanda Tangan Pemberi Kuasa"
             onSave={(sign) => setSignatures(prev => ({ ...prev, pemberi: sign }))}
           />
         </div>
@@ -90,7 +153,7 @@ const FormPanel = ({
           {data.penerimaList.map((penerima, index) => (
             <div key={penerima.id} className="relative p-5 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:border-indigo-200 hover:shadow-sm">
               {data.penerimaList.length > 1 && (
-                <button 
+                <button
                   onClick={() => removePenerima(penerima.id)}
                   className="absolute top-3 right-3 text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                   title="Hapus Penerima"
@@ -98,7 +161,7 @@ const FormPanel = ({
                   <Trash2 size={16} />
                 </button>
               )}
-              
+
               <div className="flex items-center gap-2 mb-4">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold">
                   {index + 1}
@@ -108,33 +171,33 @@ const FormPanel = ({
                 </h4>
               </div>
 
-              <InputField 
-                label="Nama Lengkap" 
-                value={penerima.nama} 
+              <InputField
+                label="Nama Lengkap"
+                value={penerima.nama}
                 onChange={(e) => updatePenerima(penerima.id, 'nama', e.target.value)}
               />
-              <InputField 
-                label="NIK / No. KTP" 
-                value={penerima.nik} 
+              <InputField
+                label="NIK / No. KTP"
+                value={penerima.nik}
                 onChange={(e) => updatePenerima(penerima.id, 'nik', e.target.value)}
               />
-              <InputField 
-                label="Pekerjaan" 
-                value={penerima.pekerjaan} 
+              <InputField
+                label="Pekerjaan"
+                value={penerima.pekerjaan}
                 onChange={(e) => updatePenerima(penerima.id, 'pekerjaan', e.target.value)}
               />
-              <TextArea 
-                label="Alamat Lengkap" 
-                value={penerima.alamat} 
+              <TextArea
+                label="Alamat Lengkap"
+                value={penerima.alamat}
                 onChange={(e) => updatePenerima(penerima.id, 'alamat', e.target.value)}
               />
-              
+
               <div className="mt-4 pt-4 border-t border-slate-200/60">
-                 <SignaturePad 
+                <SignaturePad
                   label={`Tanda Tangan Penerima #${index + 1}`}
-                  onSave={(sign) => setSignatures(prev => ({ 
-                    ...prev, 
-                    [`penerima_${penerima.id}`]: sign 
+                  onSave={(sign) => setSignatures(prev => ({
+                    ...prev,
+                    [`penerima_${penerima.id}`]: sign
                   }))}
                 />
               </div>
@@ -161,9 +224,9 @@ const FormPanel = ({
             <strong>Tips:</strong> Jelaskan secara rinci dan spesifik tindakan apa saja yang boleh dilakukan oleh Penerima Kuasa untuk menghindari penyalahgunaan wewenang.
           </p>
         </div>
-        <TextArea 
-          label="Untuk / Khusus" 
-          value={data.info.tujuan} 
+        <TextArea
+          label="Untuk / Khusus"
+          value={data.info.tujuan}
           onChange={(e) => handleInfoChange('tujuan', e.target.value)}
           placeholder="Contoh: Mengurus pengambilan sertifikat tanah di kantor BPN..."
         />
@@ -172,15 +235,15 @@ const FormPanel = ({
       {/* SECTION 4: INFORMASI SURAT */}
       <AccordionSection title="Informasi Surat" icon={Info}>
         <div className="grid grid-cols-2 gap-4">
-          <InputField 
-            label="Kota Pembuatan" 
-            value={data.info.kota} 
+          <InputField
+            label="Kota Pembuatan"
+            value={data.info.kota}
             onChange={(e) => handleInfoChange('kota', e.target.value)}
           />
-          <InputField 
-            label="Tanggal Surat" 
+          <InputField
+            label="Tanggal Surat"
             type="date"
-            value={data.info.tanggal} 
+            value={data.info.tanggal}
             onChange={(e) => handleInfoChange('tanggal', e.target.value)}
           />
         </div>
