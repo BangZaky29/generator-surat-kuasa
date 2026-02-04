@@ -106,7 +106,6 @@
 .pdf-export,
 .pdf-export * {
   overflow: visible !important;
-  transform: none !important;
 }
 
 /* Mobile Preview Scale - Scales the A4 paper down on small screens */

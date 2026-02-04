@@ -116,21 +116,27 @@ const PreviewPanel = ({ data, signatures, onSave }) => {
         >
           {/* KOP SURAT */}
           {data.kopSurat?.enabled && (
-            <div className="border-b-[3px] border-double border-black pb-4 mb-8 relative flex items-center justify-center min-h-[100px]">
-              {data.kopSurat.logo && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-24 h-24 flex items-center justify-center">
-                  <img src={data.kopSurat.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
-                </div>
-              )}
-              <div className="text-center px-16">
-                <h2 className="text-xl font-bold uppercase tracking-wide mb-1">{data.kopSurat.namaPerusahaan || "NAMA PERUSAHAAN"}</h2>
-                <p className="text-[10pt] leading-snug mb-0.5 max-w-[500px]">{data.kopSurat.alamat || "Alamat lengkap perusahaan belum diisi..."}</p>
+            <div className="border-b-[3px] border-double border-black pb-4 mb-8 flex items-center min-h-[110px]">
+              {/* Left Column (Logo) */}
+              <div className="w-[120px] shrink-0 flex items-center justify-start">
+                {data.kopSurat.logo && (
+                  <img src={data.kopSurat.logo} alt="Logo" className="max-w-[100px] max-h-[100px] object-contain" />
+                )}
+              </div>
+
+              {/* Center Column (Text Content) */}
+              <div className="flex-1 text-center px-4">
+                <h2 className="text-xl font-bold uppercase tracking-wide mb-1 leading-tight">{data.kopSurat.namaPerusahaan || "NAMA PERUSAHAAN"}</h2>
+                <p className="text-[10pt] leading-snug mb-0.5 max-w-[500px] mx-auto">{data.kopSurat.alamat || "Alamat lengkap perusahaan belum diisi..."}</p>
                 <div className="text-[9pt] flex flex-wrap justify-center gap-x-4 gap-y-0.5 text-slate-700 font-sans">
                   {data.kopSurat.telepon && <span>Telp: {data.kopSurat.telepon}</span>}
                   {data.kopSurat.email && <span>Email: {data.kopSurat.email}</span>}
                   {data.kopSurat.website && <span>Web: {data.kopSurat.website}</span>}
                 </div>
               </div>
+
+              {/* Right Column (Spacer for Balancing) */}
+              <div className="w-[120px] shrink-0" aria-hidden="true"></div>
             </div>
           )}
 
