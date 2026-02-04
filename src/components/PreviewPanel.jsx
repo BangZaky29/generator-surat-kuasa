@@ -45,8 +45,8 @@ const PreviewPanel = ({ data, signatures, onSave }) => {
       {downloadStatus !== 'idle' && (
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none">
           <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-xl border backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 ${downloadStatus === 'loading' ? 'bg-indigo-900/90 text-white border-indigo-700' :
-              downloadStatus === 'success' ? 'bg-emerald-600/90 text-white border-emerald-500' :
-                'bg-red-600/90 text-white border-red-500'
+            downloadStatus === 'success' ? 'bg-emerald-600/90 text-white border-emerald-500' :
+              'bg-red-600/90 text-white border-red-500'
             }`}>
             {downloadStatus === 'loading' && <Loader2 className="w-5 h-5 animate-spin" />}
             {downloadStatus === 'success' && <CheckCircle2 className="w-5 h-5" />}
@@ -114,6 +114,26 @@ const PreviewPanel = ({ data, signatures, onSave }) => {
           id="surat-preview"
           className="bg-white w-[210mm] min-h-[297mm] paper-shadow p-[2.5cm] text-black box-border relative shrink-0 transition-transform origin-top"
         >
+          {/* KOP SURAT */}
+          {data.kopSurat?.enabled && (
+            <div className="border-b-[3px] border-double border-black pb-4 mb-8 relative flex items-center justify-center min-h-[100px]">
+              {data.kopSurat.logo && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-24 h-24 flex items-center justify-center">
+                  <img src={data.kopSurat.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+              )}
+              <div className="text-center px-16">
+                <h2 className="text-xl font-bold uppercase tracking-wide mb-1">{data.kopSurat.namaPerusahaan || "NAMA PERUSAHAAN"}</h2>
+                <p className="text-[10pt] leading-snug mb-0.5 max-w-[500px]">{data.kopSurat.alamat || "Alamat lengkap perusahaan belum diisi..."}</p>
+                <div className="text-[9pt] flex flex-wrap justify-center gap-x-4 gap-y-0.5 text-slate-700 font-sans">
+                  {data.kopSurat.telepon && <span>Telp: {data.kopSurat.telepon}</span>}
+                  {data.kopSurat.email && <span>Email: {data.kopSurat.email}</span>}
+                  {data.kopSurat.website && <span>Web: {data.kopSurat.website}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TITLE */}
           <div className="text-center mb-8">
             <h1 className="text-xl font-bold border-b-2 border-black inline-block pb-1 mb-1 font-serif uppercase tracking-widest">

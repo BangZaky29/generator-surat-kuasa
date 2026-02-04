@@ -1,7 +1,7 @@
 import React from 'react';
 import AccordionSection from './AccordionSection';
 import SignaturePad from './SignaturePad';
-import { User, Users, FileText, Info, Plus, Trash2 } from 'lucide-react';
+import { User, Users, FileText, Info, Plus, Trash2, Building2, Image as ImageIcon, X } from 'lucide-react';
 
 const InputField = ({ label, value, onChange, placeholder, type = "text" }) => (
   <div className="input-group">
@@ -29,6 +29,61 @@ const TextArea = ({ label, value, onChange, placeholder }) => (
   </div>
 );
 
+const ImageUpload = ({ label, value, onChange }) => {
+  const fileInputRef = React.useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Ukuran file terlalu besar. Maksimal 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onChange(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="input-group">
+      <label className="input-label">{label}</label>
+      <div className="relative group/upload">
+        {value ? (
+          <div className="relative rounded-xl overflow-hidden border border-slate-200 aspect-video bg-white flex items-center justify-center p-4">
+            <img src={value} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
+            <button
+              onClick={() => onChange(null)}
+              className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover/upload:opacity-100"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => fileInputRef.current.click()}
+            className="w-full aspect-video border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all text-slate-400 hover:text-indigo-500"
+          >
+            <div className="p-3 bg-slate-100 rounded-full group-hover/upload:bg-indigo-100 transition-colors">
+              <ImageIcon size={20} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Upload Logo</span>
+          </button>
+        )}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+      </div>
+    </div>
+  );
+};
+
 const FormPanel = ({
   data,
   setData,
@@ -49,6 +104,10 @@ const FormPanel = ({
 
   const handleInfoChange = (field, value) => {
     setData(prev => ({ ...prev, info: { ...prev.info, [field]: value } }));
+  };
+
+  const handleKopChange = (field, value) => {
+    setData(prev => ({ ...prev, kopSurat: { ...prev.kopSurat, [field]: value } }));
   };
 
   return (
@@ -113,6 +172,67 @@ const FormPanel = ({
           </div>
         )}
       </div>
+
+      {/* SECTION -1: KOP SURAT (OPTIONAL) */}
+      <AccordionSection title="Informasi Kop Surat" icon={Building2}>
+        <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-xl mb-6 border border-indigo-100/50">
+          <div>
+            <h4 className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider">Aktifkan Kop Surat</h4>
+            <p className="text-[10px] text-indigo-600 mt-0.5">Tampilkan identitas perusahaan di bagian atas surat</p>
+          </div>
+          <button
+            onClick={() => handleKopChange('enabled', !data.kopSurat.enabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${data.kopSurat.enabled ? 'bg-indigo-600' : 'bg-slate-300'}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${data.kopSurat.enabled ? 'translate-x-6' : 'translate-x-1'}`}
+            />
+          </button>
+        </div>
+
+        {data.kopSurat.enabled && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <ImageUpload
+              label="Logo Perusahaan"
+              value={data.kopSurat.logo}
+              onChange={(val) => handleKopChange('logo', val)}
+            />
+            <InputField
+              label="Nama Perusahaan"
+              value={data.kopSurat.namaPerusahaan}
+              onChange={(e) => handleKopChange('namaPerusahaan', e.target.value)}
+              placeholder="Contoh: PT. Nuansa Solution"
+            />
+            <TextArea
+              label="Alamat Perusahaan"
+              value={data.kopSurat.alamat}
+              onChange={(e) => handleKopChange('alamat', e.target.value)}
+              placeholder="Jl. Raya Utama No. 123..."
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                label="Telepon"
+                value={data.kopSurat.telepon}
+                onChange={(e) => handleKopChange('telepon', e.target.value)}
+                placeholder="021-1234567"
+              />
+              <InputField
+                label="Email"
+                value={data.kopSurat.email}
+                onChange={(e) => handleKopChange('email', e.target.value)}
+                placeholder="info@perusahaan.com"
+              />
+            </div>
+            <InputField
+              label="Website"
+              value={data.kopSurat.website}
+              onChange={(e) => handleKopChange('website', e.target.value)}
+              placeholder="www.perusahaan.com"
+            />
+          </div>
+        )}
+      </AccordionSection>
+
       {/* SECTION 1: PEMBERI KUASA */}
       <AccordionSection title="Biodata Pemberi Kuasa" icon={User} isOpen={true}>
         <InputField

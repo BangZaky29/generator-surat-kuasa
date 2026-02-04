@@ -43,6 +43,15 @@ function App() {
       tujuan: '',
       kota: '',
       tanggal: new Date().toISOString().split('T')[0],
+    },
+    kopSurat: {
+      enabled: false,
+      namaPerusahaan: '',
+      alamat: '',
+      telepon: '',
+      email: '',
+      website: '',
+      logo: null,
     }
   });
 
