@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import SubscriptionGuard from './SubscriptionGuard';
 import Header from './components/Header';
 import FormPanel from './components/FormPanel';
 import PreviewPanel from './components/PreviewPanel';
@@ -174,70 +175,72 @@ function App() {
   };
 
   return (
-    <div className="h-dvh flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden">
-      <Header />
+    <SubscriptionGuard featureSlug="surat-kuasa">
+      <div className="h-dvh flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden">
+        <Header />
 
-      {/* Main Container - Flex grow handles remaining height automatically */}
-      <main className="flex-1 w-full max-w-7xl mx-auto md:p-6 lg:p-8 flex flex-col overflow-hidden relative">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 h-full w-full">
+        {/* Main Container - Flex grow handles remaining height automatically */}
+        <main className="flex-1 w-full max-w-7xl mx-auto md:p-6 lg:p-8 flex flex-col overflow-hidden relative">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 h-full w-full">
 
-          {/* LEFT: FORM PANEL */}
-          <div className={`
+            {/* LEFT: FORM PANEL */}
+            <div className={`
             md:col-span-5 lg:col-span-4 h-full flex flex-col bg-slate-50 md:bg-transparent overflow-hidden
             ${viewMode === 'form' ? 'block' : 'hidden md:flex'}
           `}>
-            <FormPanel
-              data={formData}
-              setData={setFormData}
-              signatures={signatures}
-              setSignatures={setSignatures}
-              addPenerima={addPenerima}
-              removePenerima={removePenerima}
-              updatePenerima={updatePenerima}
-              history={history}
-              onImport={openImportModal}
-              onDeleteHistory={openDeleteModal}
-            />
-          </div>
+              <FormPanel
+                data={formData}
+                setData={setFormData}
+                signatures={signatures}
+                setSignatures={setSignatures}
+                addPenerima={addPenerima}
+                removePenerima={removePenerima}
+                updatePenerima={updatePenerima}
+                history={history}
+                onImport={openImportModal}
+                onDeleteHistory={openDeleteModal}
+              />
+            </div>
 
-          {/* RIGHT: PREVIEW PANEL */}
-          <div className={`
+            {/* RIGHT: PREVIEW PANEL */}
+            <div className={`
             md:col-span-7 lg:col-span-8 h-full flex flex-col overflow-hidden
             ${viewMode === 'preview' ? 'block' : 'hidden md:flex'}
           `}>
-            <PreviewPanel
-              data={formData}
-              signatures={signatures}
-              onSave={openSaveModal}
-            />
+              <PreviewPanel
+                data={formData}
+                signatures={signatures}
+                onSave={openSaveModal}
+              />
+            </div>
+
           </div>
+        </main>
 
-        </div>
-      </main>
+        <FloatingToggle viewMode={viewMode} toggleView={toggleView} />
 
-      <FloatingToggle viewMode={viewMode} toggleView={toggleView} />
+        {/* Notifications */}
+        {notifications.map(n => (
+          <Notification
+            key={n.id}
+            message={n.message}
+            type={n.type}
+            onClose={() => removeNotification(n.id)}
+          />
+        ))}
 
-      {/* Notifications */}
-      {notifications.map(n => (
-        <Notification
-          key={n.id}
-          message={n.message}
-          type={n.type}
-          onClose={() => removeNotification(n.id)}
+        {/* Global Modals */}
+        <Modal
+          isOpen={modalConfig.isOpen}
+          onClose={closeModals}
+          onConfirm={modalConfig.onConfirm}
+          type={modalConfig.type}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          showInput={modalConfig.showInput}
         />
-      ))}
-
-      {/* Global Modals */}
-      <Modal
-        isOpen={modalConfig.isOpen}
-        onClose={closeModals}
-        onConfirm={modalConfig.onConfirm}
-        type={modalConfig.type}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        showInput={modalConfig.showInput}
-      />
-    </div>
+      </div>
+    </SubscriptionGuard>
   );
 }
 
