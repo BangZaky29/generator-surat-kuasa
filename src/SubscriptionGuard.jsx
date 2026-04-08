@@ -77,7 +77,7 @@ const SubscriptionGuard = ({ children, featureSlug = CONFIG.DEFAULT_FEATURE_SLUG
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    phone: normalizePhone(phone),
+                    phone: phone.includes('@') ? phone.trim() : normalizePhone(phone),
                     feature_slug: featureSlug
                 })
             });
@@ -126,7 +126,7 @@ const SubscriptionGuard = ({ children, featureSlug = CONFIG.DEFAULT_FEATURE_SLUG
                             {featureSlug.replace(/-/g, ' ')}
                         </span>
                         <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>Verifikasi Akses</h1>
-                        <p style={{ color: '#6b7280' }}>Masukkan nomor WhatsApp untuk melanjutkan</p>
+                        <p style={{ color: '#6b7280' }}>Masukkan WA, Email, atau Nama untuk melanjutkan</p>
                     </div>
 
                     {error && (
@@ -138,16 +138,16 @@ const SubscriptionGuard = ({ children, featureSlug = CONFIG.DEFAULT_FEATURE_SLUG
                     <form onSubmit={handleVerify}>
                         <div style={{ marginBottom: '16px' }}>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                                Nomor WhatsApp
+                                WhatsApp / Email / Nama
                             </label>
                             <div style={{ position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }}>+62</span>
+                                
                                 <input
                                     type="tel"
                                     value={phone}
-                                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                                    placeholder="8123456789"
-                                    style={{ width: '100%', paddingLeft: '48px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', border: '1px solid #d1d5db', borderRadius: '12px', outline: 'none', boxSizing: 'border-box' }}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    placeholder="WhatsApp, Email, atau Nama"
+                                    style={{ width: '100%', paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', border: '1px solid #d1d5db', borderRadius: '12px', outline: 'none', boxSizing: 'border-box' }}
                                     required
                                 />
                             </div>
