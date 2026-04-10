@@ -143,7 +143,8 @@ const SubscriptionGuard = ({ children, featureSlug = CONFIG.DEFAULT_FEATURE_SLUG
                             <div style={{ position: 'relative' }}>
                                 
                                 <input
-                                    type="tel"
+                                    type="text"
+                                    inputMode="text"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="WhatsApp, Email, atau Nama"
